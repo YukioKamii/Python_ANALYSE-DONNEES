@@ -110,46 +110,94 @@ print(df_clean["campaign_success"].value_counts(dropna=False))
 print("Type de campaign_success :", df_clean["campaign_success"].dtype)
 
 
-# 4) Détection + suppression des valeurs suspectes/aberrantes
+# ================================================================
+# ETAPE 4 - DETECTION ET SUPPRESSION DES VALEURS SUSPECTES
+# ================================================================
 
 print_section("ETAPE 4 - DETECTION ET SUPPRESSION DES VALEURS SUSPECTES")
 
 
-# -----------------------------
-# 4.1 Identification des anomalies
-# -----------------------------
+# -------------------------------------------------
+# 4.1 Fonction de visualisation des anomalies (±2σ)
+# -------------------------------------------------
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+def plot_anomalies(df, column_name):
+    values = df[column_name]
+
+    # Moyenne + écart-type
+    mean = values.mean()
+    std = values.std()
+    upper = mean + 2 * std
+    lower = mean - 2 * std
+
+    # Scatter plot
+    plt.figure(figsize=(10, 5))
+    plt.scatter(df.index, values, label="Normal", s=10)
+
+    # Points anormaux
+    anomalies = df[(values > upper) | (values < lower)]
+    plt.scatter(anomalies.index, anomalies[column_name], color="red", s=40, label="Anomalie")
+
+    # Lignes de référence
+    plt.axhline(mean, color="green", linestyle="--", label="Moyenne")
+    plt.axhline(upper, color="orange", linestyle="--", label="+2σ")
+    plt.axhline(lower, color="orange", linestyle="--", label="-2σ")
+
+    plt.title(f"Détection d'anomalies pour {column_name}")
+    plt.xlabel("Index")
+    plt.ylabel(column_name)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+# -------------------------------------------------
+# 4.2 Identification des anomalies via règles logiques
+# -------------------------------------------------
 
 print("\nÂges uniques triés :")
 print(sorted(df_clean["age"].dropna().unique()))
 
-# règles logiques :
-# - âge < 16 : trop jeune pour être cible réaliste
-# - âge > 60 : trop vieux selon le dataset
+# règles logiques
 age_anormal = (df_clean["age"] < 16) | (df_clean["age"] > 60)
 
-# scores d'intérêt normalement entre 0 et 100
 gaming_anormal = (df_clean["gaming_interest_score"] < 0) | (df_clean["gaming_interest_score"] > 100)
 insta_anormal  = (df_clean["insta_design_interest_score"] < 0) | (df_clean["insta_design_interest_score"] > 100)
 foot_anormal   = (df_clean["football_interest_score"] < 0) | (df_clean["football_interest_score"] > 100)
 
-# une ligne est anormale si l'un des critères est vrai
 anomalies = age_anormal | gaming_anormal | insta_anormal | foot_anormal
 
 print("\nNombre total de lignes anormales :", anomalies.sum())
 
-# -----------------------------
-# 4.2 Suppression des anomalies
-# -----------------------------
-df_model = df_clean[~anomalies].copy()
 
-# Suppression des lignes sans info critique (produit ou âge manquant par ex.)
-df_model = df_model.dropna(subset=["age", "recommended_product"])
+# -------------------------------------------------
+# 4.3 Visualisation des anomalies (±2σ)
+# -------------------------------------------------
+
+print("\nAffichage des graphiques d’anomalies (±2σ)…")
+
+plot_anomalies(df_clean, "gaming_interest_score")
+plot_anomalies(df_clean, "insta_design_interest_score")
+plot_anomalies(df_clean, "football_interest_score")
+plot_anomalies(df_clean, "age")
+
+
+# -------------------------------------------------
+# 4.4 Suppression des anomalies
+# -------------------------------------------------
+
+df_model = df_clean[~anomalies].copy()
+df_model = df_model.dropna(subset=["age", "recommended_product"])  # sécurité
 
 print("\nTaille avant nettoyage :", df_clean.shape)
 print("Taille après nettoyage :", df_model.shape)
 
 print("\nStats après nettoyage :")
 print(df_model.describe(include="all"))
+
 
 
 # 5) KPI: Taux de réussite global de la campagne
