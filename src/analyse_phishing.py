@@ -183,7 +183,7 @@ print((success_by_age_group * 100).round(2).astype(str) + " %")
 
 # 6) Analyse des corrélations et scoring des intérêts
 
-print_section("ETAPE X - ANALYSE DES CORRELATIONS")
+print_section("ETAPE 6 - ANALYSE DES CORRELATIONS")
 
 
 # -----------------------------
