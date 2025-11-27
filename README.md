@@ -10,16 +10,6 @@ L’objectif est de :
 - Produire des visualisations  
 - Construire un scénario de phishing fictif basé sur les résultats  
 
----
-
-## 📁 Structure du dépôt
-├── data/
-│ └── result.csv 
-├── src/
-│ └── analyse_phishing.py 
-├── Rapport.pdf
-└── README.md 
-
 
 ---
 
